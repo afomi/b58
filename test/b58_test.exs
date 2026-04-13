@@ -110,7 +110,7 @@ defmodule B58Test do
 
   test "version_encode58_check!/1 Base58Check encodes a versioned RIPEMD-160 hash" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    assert 0xf54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+    assert 0xF54A5851E9372B87810A8E60CDD2E7CFD80B6E31
            |> :binary.encode_unsigned()
            |> B58.version_binary(0)
            |> B58.version_encode58_check!() == "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
