@@ -8,7 +8,7 @@ defmodule B58.MixProject do
     [
       app: :basefiftyeight,
       version: @version,
-      elixir: ">= 1.6.0",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
 
