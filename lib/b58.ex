@@ -161,9 +161,9 @@ defmodule B58 do
   """
 
   # note that each of these alphabets is a charlist, not a binary!
-  b58_btc_alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-  b58_flickr_alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
-  b58_ripple_alphabet = 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz'
+  b58_btc_alphabet = ~c"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+  b58_flickr_alphabet = ~c"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
+  b58_ripple_alphabet = ~c"rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz"
 
   # you can add more alphabets here. alphabets are kept in a specific order here intentionally.
   alphabet_meta = [
