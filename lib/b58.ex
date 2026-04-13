@@ -169,7 +169,7 @@ defmodule B58 do
   alphabet_meta = [
     %{alphabet_id: :btc, alphabet: b58_btc_alphabet},
     %{alphabet_id: :flickr, alphabet: b58_flickr_alphabet},
-    %{alphabet_id: :ripple, alphabet: b58_ripple_alphabet},
+    %{alphabet_id: :ripple, alphabet: b58_ripple_alphabet}
   ]
 
   @typedoc """
@@ -177,7 +177,7 @@ defmodule B58 do
   """
   @type version :: <<_::8>>
 
-  @typedoc"""
+  @typedoc """
   Unsigned single-byte integer (unint8 commonly)
   """
   @type version_integer :: 0..255
@@ -275,7 +275,8 @@ defmodule B58 do
       "version must be a single byte binary or unsigned integer, data must be a binary."}
 
   """
-  @spec encode58_check(binary(), version | version_integer(), keyword()) :: {:ok, b58check_binary()} | {:error, term()}
+  @spec encode58_check(binary(), version | version_integer(), keyword()) ::
+          {:ok, b58check_binary()} | {:error, term()}
   def encode58_check(data, version, opts \\ []) do
     {:ok, encode58_check!(data, version, opts)}
   rescue
@@ -317,7 +318,8 @@ defmodule B58 do
       {:ok, "XZABbyyTLAtpXB4uyan6stxnyFhPH2kbr1v6j26SBAvDqrQi8GGBDKxs"}
 
   """
-  @spec version_encode58_check(versioned_binary(), keyword()) :: {:ok, b58check_binary()} | {:error, term()}
+  @spec version_encode58_check(versioned_binary(), keyword()) ::
+          {:ok, b58check_binary()} | {:error, term()}
   def version_encode58_check(versioned_data, opts \\ []) do
     {:ok, do_encode58_check(versioned_data, opts)}
   rescue
@@ -391,12 +393,15 @@ defmodule B58 do
   """
   @spec decode58_check!(b58check_binary(), keyword()) :: {binary(), version()}
   def decode58_check!(string, opts \\ [])
+
   def decode58_check!(string, opts) when is_binary(string) and byte_size(string) > 5 do
     decoded_bin = decode58!(string, opts)
     decoded_size = byte_size(decoded_bin)
     payload_size = decoded_size - 5
 
-    <<version::binary-size(1), payload::binary-size(payload_size), checksum::binary-size(4)>> = decoded_bin
+    <<version::binary-size(1), payload::binary-size(payload_size), checksum::binary-size(4)>> =
+      decoded_bin
+
     if calculate_checksum(<<version::binary-size(1), payload::binary>>) == checksum do
       {payload, version}
     else
@@ -429,7 +434,8 @@ defmodule B58 do
       {:error, "Invalid checksum."}
 
   """
-  @spec decode58_check(b58check_binary(), keyword()) :: {:ok, {binary(), version()}} | {:error, term()}
+  @spec decode58_check(b58check_binary(), keyword()) ::
+          {:ok, {binary(), version()}} | {:error, term()}
   def decode58_check(string, opts \\ []) when is_binary(string) do
     {:ok, decode58_check!(string, opts)}
   rescue
@@ -455,6 +461,7 @@ defmodule B58 do
   """
   @spec version_decode58_check!(b58check_binary(), keyword()) :: versioned_binary()
   def version_decode58_check!(string, opts \\ [])
+
   def version_decode58_check!(string, opts) when is_binary(string) and byte_size(string) > 5 do
     # Again, intentionally avoiding error tuples and such here
     decoded_bin = decode58!(string, opts)
@@ -462,6 +469,7 @@ defmodule B58 do
     bin_size = decoded_size - 4
 
     <<versioned_binary::binary-size(bin_size), checksum::binary-size(4)>> = decoded_bin
+
     if calculate_checksum(versioned_binary) == checksum do
       versioned_binary
     else
@@ -497,7 +505,8 @@ defmodule B58 do
        110, 111, 119, 32, 121, 111, 117, 114, 32, 66, 105, 103, 32, 79, 46>>}
 
   """
-  @spec version_decode58_check(b58check_binary(), keyword()) :: {:ok, versioned_binary()} | {:error, term()}
+  @spec version_decode58_check(b58check_binary(), keyword()) ::
+          {:ok, versioned_binary()} | {:error, term()}
   def version_decode58_check(string, opts \\ []) when is_binary(string) do
     {:ok, version_decode58_check!(string, opts)}
   rescue
@@ -525,6 +534,7 @@ defmodule B58 do
   """
   @spec version_binary(binary(), version | version_integer()) :: versioned_binary()
   def version_binary(data, version)
+
   def version_binary(data, version)
       when is_binary(data) and is_integer(version) and version >= 0 and version <= 255 do
     <<version::unsigned-integer-size(1)-unit(8), data::binary>>
@@ -536,7 +546,8 @@ defmodule B58 do
   end
 
   def version_binary(_data, _version) do
-    raise ArgumentError, "version must be a single byte binary or unsigned integer, data must be a binary."
+    raise ArgumentError,
+          "version must be a single byte binary or unsigned integer, data must be a binary."
   end
 
   @doc """
@@ -550,20 +561,24 @@ defmodule B58 do
   """
   @spec alphabets() :: [alphabet()]
   defmacro alphabets() do
-    alphabet_ids = Enum.map(unquote(alphabet_meta|> Macro.escape()) , fn(%{alphabet_id: alphabet_id}) -> alphabet_id end)
+    alphabet_ids =
+      Enum.map(unquote(alphabet_meta |> Macro.escape()), fn %{alphabet_id: alphabet_id} ->
+        alphabet_id
+      end)
+
     quote do
       unquote(alphabet_ids)
     end
   end
 
-#===============================================================================
-# Private eyes, is watching you
-#===============================================================================
+  # ===============================================================================
+  # Private eyes, is watching you
+  # ===============================================================================
 
-#===============================================================================
-# Would prefer to write the following few macros a little bit differently, but leaving this to be semi-consistent with the 'Base' Elixir core library.
-# This code here has been adapted from https://github.com/elixir-lang/elixir/blob/v1.7.3/lib/elixir/lib/base.ex and is somewhat simplified.
-#===============================================================================
+  # ===============================================================================
+  # Would prefer to write the following few macros a little bit differently, but leaving this to be semi-consistent with the 'Base' Elixir core library.
+  # This code here has been adapted from https://github.com/elixir-lang/elixir/blob/v1.7.3/lib/elixir/lib/base.ex and is somewhat simplified.
+  # ===============================================================================
   defmacrop encode_char(alphabet, value) do
     quote do
       case unquote(value) do
@@ -573,9 +588,10 @@ defmodule B58 do
   end
 
   defp encode_char_clauses(alphabet) do
-    clauses = alphabet
-              |> Enum.with_index()
-              |> encode_clauses()
+    clauses =
+      alphabet
+      |> Enum.with_index()
+      |> encode_clauses()
 
     clauses ++ bad_digit_clause()
   end
