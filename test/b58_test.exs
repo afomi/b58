@@ -38,12 +38,15 @@ defmodule B58Test do
     assert B58.encode58_check!("a", 255) == "3CAw3RMCe"
     assert B58.encode58_check!(<<>>, <<2>>) == "Epi3KP"
     assert B58.encode58_check!(<<>>, 2) == "Epi3KP"
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", 256)
     end
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", -1)
     end
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", <<1, 0>>)
     end
@@ -107,7 +110,7 @@ defmodule B58Test do
 
   test "version_encode58_check!/1 Base58Check encodes a versioned RIPEMD-160 hash" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    assert 0xf54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+    assert 0xF54A5851E9372B87810A8E60CDD2E7CFD80B6E31
            |> :binary.encode_unsigned()
            |> B58.version_binary(0)
            |> B58.version_encode58_check!() == "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
@@ -115,7 +118,10 @@ defmodule B58Test do
 
   test "version_encode58_check!/1 handles Base58 encoding leading zeroes" do
     assert B58.version_encode58_check!(<<0, 0>>) == "112edB6q"
-    assert B58.version_encode58_check!(<<0, 0, 0, 0, "hello world">>) == "11113vQB7B6MrGQZaxCrokgx4"
+
+    assert B58.version_encode58_check!(<<0, 0, 0, 0, "hello world">>) ==
+             "11113vQB7B6MrGQZaxCrokgx4"
+
     assert B58.version_encode58_check!(<<0, 0, 0, 0>>) == "11114bdQda"
   end
 
@@ -136,31 +142,37 @@ defmodule B58Test do
     # From https://github.com/multiformats/multihash
     assert "QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk"
            |> B58.decode58!()
-           |> Base.encode16() == "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
+           |> Base.encode16() ==
+             "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
   end
 
   test "decode58!/1 Base58 handles invalid binaries when using the bitcoin alphabet" do
-    #invalid character
+    # invalid character
     assert_raise ArgumentError, fn ->
       B58.decode58!("~")
     end
-    #invalid leading character
+
+    # invalid leading character
     assert_raise ArgumentError, fn ->
       B58.decode58!("~Cn8eVZg")
     end
-    #invalid trailing character
+
+    # invalid trailing character
     assert_raise ArgumentError, fn ->
       B58.decode58!("Cn8eVZg^")
     end
-    #invalid character mid string
+
+    # invalid character mid string
     assert_raise ArgumentError, fn ->
       B58.decode58!("Cn8%eVZg")
     end
-    #invalid character excluded from alphabet due to clarity
+
+    # invalid character excluded from alphabet due to clarity
     assert_raise ArgumentError, fn ->
       B58.decode58!("OCn8eVZg")
     end
-    #base16 encoded string
+
+    # base16 encoded string
     assert_raise ArgumentError, fn ->
       "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
       |> B58.decode58!()
@@ -168,19 +180,20 @@ defmodule B58Test do
   end
 
   test "decode58/1 Base58 handles invalid binaries when using the bitcoin alphabet" do
-    #invalid character
+    # invalid character
     {:error, _} = B58.decode58("~")
-    #invalid leading character
+    # invalid leading character
     {:error, _} = B58.decode58("~Cn8eVZg")
-    #invalid trailing character
+    # invalid trailing character
     {:error, _} = B58.decode58("Cn8eVZg^")
-    #invalid character mid string
+    # invalid character mid string
     {:error, _} = B58.decode58("Cn8%eVZg")
-    #invalid character excluded from alphabet due to clarity
+    # invalid character excluded from alphabet due to clarity
     {:error, _} = B58.decode58("OCn8eVZg")
-    #base16 encoded string
-    {:error, _} = "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
-                  |> B58.decode58()
+    # base16 encoded string
+    {:error, _} =
+      "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
+      |> B58.decode58()
   end
 
   test "decode58_check!/1 decodes Base58Check encoded binaries using the bitcoin alphabet" do
@@ -199,32 +212,35 @@ defmodule B58Test do
 
   test "decode58_check!/1 Base58Check decodes to a RIPEMD-160 encoded hash" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    {hash_bin, version} = "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
-                          |> B58.decode58_check!()
+    {hash_bin, version} =
+      "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
+      |> B58.decode58_check!()
+
     assert version == <<0>>
+
     assert hash_bin
            |> Base.encode16(case: :lower) == "f54a5851e9372b87810a8e60cdd2e7cfd80b6e31"
   end
 
   test "decode58_check!/1 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     assert_raise ArgumentError, fn -> B58.decode58_check!("12L5B5yqsf7vwc") end
-    #corrupt first byte
+    # corrupt first byte
     assert_raise ArgumentError, fn -> B58.decode58_check!("D5oSH5yUDQS9XwzogrcWP") end
-    #corrupt middle byte
+    # corrupt middle byte
     assert_raise ArgumentError, fn -> B58.decode58_check!("YXMkDYBSTEWWuE2vQhQ1nc") end
-    #corrupted empty
+    # corrupted empty
     assert_raise ArgumentError, fn -> B58.decode58_check!("1Wi4bh") end
   end
 
   test "decode58_check/1 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     {:error, _} = B58.decode58_check("12L5B5yqsf7vwc")
-    #corrupt first byte
+    # corrupt first byte
     {:error, _} = B58.decode58_check("D5oSH5yUDQS9XwzogrcWP")
-    #corrupt middle byte
+    # corrupt middle byte
     {:error, _} = B58.decode58_check("YXMkDYBSTEWWuE2vQhQ1nc")
-    #corrupted empty
+    # corrupted empty
     {:error, _} = B58.decode58_check("1Wi4bh")
   end
 
@@ -239,6 +255,7 @@ defmodule B58Test do
       |> Base.encode64()
       |> B58.decode58_check!()
     end
+
     # missing bytes
     assert_raise ArgumentError, fn -> B58.decode58_check!("1Wh4b") end
     assert_raise ArgumentError, fn -> B58.decode58_check!(<<>>) end
@@ -250,9 +267,11 @@ defmodule B58Test do
     # Underscore is not in this alphabet
     {:error, _} = B58.decode58_check("B5oSH5yUDQS9XwzogrcW_")
     # Base64 alphabet is not compatible
-    {:error, _} = "Hello World"
-                  |> Base.encode64()
-                  |> B58.decode58_check()
+    {:error, _} =
+      "Hello World"
+      |> Base.encode64()
+      |> B58.decode58_check()
+
     # missing bytes
     {:error, _} = B58.decode58_check("1Wh4b")
     {:error, _} = B58.decode58_check(<<>>)
@@ -276,28 +295,28 @@ defmodule B58Test do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
     assert "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
            |> B58.version_decode58_check!()
-           |> :binary.decode_unsigned() == 0x0f54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+           |> :binary.decode_unsigned() == 0x0F54A5851E9372B87810A8E60CDD2E7CFD80B6E31
   end
 
   test "version_decode58_check!/1 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("12L5B5yqsf7vwc") end
-    #corrupt first byte
+    # corrupt first byte
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("D5oSH5yUDQS9XwzogrcWP") end
-    #corrupt middle byte
+    # corrupt middle byte
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("YXMkDYBSTEWWuE2vQhQ1nc") end
-    #corrupted empty
+    # corrupted empty
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("1Wi4bh") end
   end
 
   test "version_decode58_check/1 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     {:error, _} = B58.version_decode58_check("12L5B5yqsf7vwc")
-    #corrupt first byte
+    # corrupt first byte
     {:error, _} = B58.version_decode58_check("D5oSH5yUDQS9XwzogrcWP")
-    #corrupt middle byte
+    # corrupt middle byte
     {:error, _} = B58.version_decode58_check("YXMkDYBSTEWWuE2vQhQ1nc")
-    #corrupted empty
+    # corrupted empty
     {:error, _} = B58.version_decode58_check("1Wi4bh")
   end
 
@@ -312,6 +331,7 @@ defmodule B58Test do
       |> Base.encode64()
       |> B58.version_decode58_check!()
     end
+
     # missing bytes
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("1Wh4b") end
     assert_raise ArgumentError, fn -> B58.version_decode58_check!(<<>>) end
@@ -323,9 +343,11 @@ defmodule B58Test do
     # Underscore is not in this alphabet
     {:error, _} = B58.version_decode58_check("B5oSH5yUDQS9XwzogrcW_")
     # Base64 alphabet is not compatible
-    {:error, _} = "Hello World"
-                  |> Base.encode64()
-                  |> B58.version_decode58_check()
+    {:error, _} =
+      "Hello World"
+      |> Base.encode64()
+      |> B58.version_decode58_check()
+
     # missing bytes
     {:error, _} = B58.version_decode58_check("1Wh4b")
     {:error, _} = B58.version_decode58_check(<<>>)
@@ -365,12 +387,15 @@ defmodule B58Test do
     assert B58.encode58_check!("a", 255, alphabet: :btc) == "3CAw3RMCe"
     assert B58.encode58_check!(<<>>, <<2>>, alphabet: :btc) == "Epi3KP"
     assert B58.encode58_check!(<<>>, 2, alphabet: :btc) == "Epi3KP"
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", 256, alphabet: :btc)
     end
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", -1, alphabet: :btc)
     end
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", <<1, 0>>, alphabet: :btc)
     end
@@ -386,7 +411,10 @@ defmodule B58Test do
   test "encode58_check/3 Base58Check encodes strings according to the bitcoin alphabet" do
     assert B58.encode58_check("hello", 0, alphabet: :btc) == {:ok, "12L5B5yqsf7vwb"}
     assert B58.encode58_check("hello world", 1, alphabet: :btc) == {:ok, "B5oSH5yUDQS9XwzogrcWP"}
-    assert B58.encode58_check("Hello World", 255, alphabet: :btc) == {:ok, "YXMkDYBSTEWVuE2vQhQ1nc"}
+
+    assert B58.encode58_check("Hello World", 255, alphabet: :btc) ==
+             {:ok, "YXMkDYBSTEWVuE2vQhQ1nc"}
+
     assert B58.encode58_check(<<>>, 0, alphabet: :btc) == {:ok, "1Wh4bh"}
   end
 
@@ -394,7 +422,8 @@ defmodule B58Test do
     # From https://github.com/multiformats/multihash
     assert "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
            |> Base.decode16!()
-           |> B58.encode58_check!(0, alphabet: :btc) == "13gXk986h9pApW3uNeGAHDqUnYHo8c1oSfHajVDuzPtiSokwhzzeK"
+           |> B58.encode58_check!(0, alphabet: :btc) ==
+             "13gXk986h9pApW3uNeGAHDqUnYHo8c1oSfHajVDuzPtiSokwhzzeK"
   end
 
   test "encode58_check!/3 Base58Check encodes a RIPEMD-160 hash" do
@@ -406,7 +435,10 @@ defmodule B58Test do
 
   test "encode58_check!/2 handles Base58 encoding leading zeroes" do
     assert B58.encode58_check!(<<0>>, 0, alphabet: :btc) == "112edB6q"
-    assert B58.encode58_check!(<<0, 0, 0, "hello world">>, 0, alphabet: :btc) == "11113vQB7B6MrGQZaxCrokgx4"
+
+    assert B58.encode58_check!(<<0, 0, 0, "hello world">>, 0, alphabet: :btc) ==
+             "11113vQB7B6MrGQZaxCrokgx4"
+
     assert B58.encode58_check!(<<0, 0, 0>>, 0, alphabet: :btc) == "11114bdQda"
   end
 
@@ -420,21 +452,31 @@ defmodule B58Test do
 
   test "version_encode58_check/3 Base58Check encodes strings according to the bitcoin alphabet" do
     assert B58.version_encode58_check(<<0, "hello">>, alphabet: :btc) == {:ok, "12L5B5yqsf7vwb"}
-    assert B58.version_encode58_check(<<1, "hello world">>, alphabet: :btc) == {:ok, "B5oSH5yUDQS9XwzogrcWP"}
-    assert B58.version_encode58_check(<<255, "Hello World">>, alphabet: :btc) == {:ok, "YXMkDYBSTEWVuE2vQhQ1nc"}
+
+    assert B58.version_encode58_check(<<1, "hello world">>, alphabet: :btc) ==
+             {:ok, "B5oSH5yUDQS9XwzogrcWP"}
+
+    assert B58.version_encode58_check(<<255, "Hello World">>, alphabet: :btc) ==
+             {:ok, "YXMkDYBSTEWVuE2vQhQ1nc"}
+
     assert B58.version_encode58_check(<<0>>, alphabet: :btc) == {:ok, "1Wh4bh"}
   end
 
   test "version_encode58_check!/3 Base58Check encodes strings according to the bitcoin alphabet" do
     assert B58.version_encode58_check!(<<0, "hello">>, alphabet: :btc) == "12L5B5yqsf7vwb"
-    assert B58.version_encode58_check!(<<1, "hello world">>, alphabet: :btc) == "B5oSH5yUDQS9XwzogrcWP"
-    assert B58.version_encode58_check!(<<255, "Hello World">>, alphabet: :btc) == "YXMkDYBSTEWVuE2vQhQ1nc"
+
+    assert B58.version_encode58_check!(<<1, "hello world">>, alphabet: :btc) ==
+             "B5oSH5yUDQS9XwzogrcWP"
+
+    assert B58.version_encode58_check!(<<255, "Hello World">>, alphabet: :btc) ==
+             "YXMkDYBSTEWVuE2vQhQ1nc"
+
     assert B58.version_encode58_check!(<<0>>, alphabet: :btc) == "1Wh4bh"
   end
 
   test "version_encode58_check!/2 Base58Check encodes a versioned RIPEMD-160 hash" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    assert 0xf54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+    assert 0xF54A5851E9372B87810A8E60CDD2E7CFD80B6E31
            |> :binary.encode_unsigned()
            |> B58.version_binary(0)
            |> B58.version_encode58_check!(alphabet: :btc) == "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
@@ -442,7 +484,10 @@ defmodule B58Test do
 
   test "version_encode58_check!/2 handles Base58 encoding leading zeroes" do
     assert B58.version_encode58_check!(<<0, 0>>, alphabet: :btc) == "112edB6q"
-    assert B58.version_encode58_check!(<<0, 0, 0, 0, "hello world">>, alphabet: :btc) == "11113vQB7B6MrGQZaxCrokgx4"
+
+    assert B58.version_encode58_check!(<<0, 0, 0, 0, "hello world">>, alphabet: :btc) ==
+             "11113vQB7B6MrGQZaxCrokgx4"
+
     assert B58.version_encode58_check!(<<0, 0, 0, 0>>, alphabet: :btc) == "11114bdQda"
   end
 
@@ -463,31 +508,37 @@ defmodule B58Test do
     # From https://github.com/multiformats/multihash
     assert "QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk"
            |> B58.decode58!(alphabet: :btc)
-           |> Base.encode16() == "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
+           |> Base.encode16() ==
+             "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
   end
 
   test "decode58!/2 Base58 handles invalid binaries when using the bitcoin alphabet" do
-    #invalid character
+    # invalid character
     assert_raise ArgumentError, fn ->
       B58.decode58!("~", alphabet: :btc)
     end
-    #invalid leading character
+
+    # invalid leading character
     assert_raise ArgumentError, fn ->
       B58.decode58!("~Cn8eVZg", alphabet: :btc)
     end
-    #invalid trailing character
+
+    # invalid trailing character
     assert_raise ArgumentError, fn ->
       B58.decode58!("Cn8eVZg^", alphabet: :btc)
     end
-    #invalid character mid string
+
+    # invalid character mid string
     assert_raise ArgumentError, fn ->
       B58.decode58!("Cn8%eVZg", alphabet: :btc)
     end
-    #invalid character excluded from alphabet due to clarity
+
+    # invalid character excluded from alphabet due to clarity
     assert_raise ArgumentError, fn ->
       B58.decode58!("OCn8eVZg", alphabet: :btc)
     end
-    #base16 encoded string
+
+    # base16 encoded string
     assert_raise ArgumentError, fn ->
       "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
       |> B58.decode58!(alphabet: :btc)
@@ -495,63 +546,81 @@ defmodule B58Test do
   end
 
   test "decode58/2 Base58 handles invalid binaries when using the bitcoin alphabet" do
-    #invalid character
+    # invalid character
     {:error, _} = B58.decode58("~", alphabet: :btc)
-    #invalid leading character
+    # invalid leading character
     {:error, _} = B58.decode58("~Cn8eVZg", alphabet: :btc)
-    #invalid trailing character
+    # invalid trailing character
     {:error, _} = B58.decode58("Cn8eVZg^", alphabet: :btc)
-    #invalid character mid string
+    # invalid character mid string
     {:error, _} = B58.decode58("Cn8%eVZg", alphabet: :btc)
-    #invalid character excluded from alphabet due to clarity
+    # invalid character excluded from alphabet due to clarity
     {:error, _} = B58.decode58("OCn8eVZg", alphabet: :btc)
-    #base16 encoded string
-    {:error, _} = "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
-                  |> B58.decode58(alphabet: :btc)
+    # base16 encoded string
+    {:error, _} =
+      "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
+      |> B58.decode58(alphabet: :btc)
   end
 
   test "decode58_check!/2 decodes Base58Check encoded binaries using the bitcoin alphabet" do
     assert B58.decode58_check!("12L5B5yqsf7vwb", alphabet: :btc) == {"hello", <<0>>}
     assert B58.decode58_check!("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) == {"hello world", <<1>>}
-    assert B58.decode58_check!("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) == {"Hello World", <<255>>}
+
+    assert B58.decode58_check!("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) ==
+             {"Hello World", <<255>>}
+
     assert B58.decode58_check!("1Wh4bh", alphabet: :btc) == {<<>>, <<0>>}
   end
 
   test "decode58_check/2 decodes Base58Check encoded binaries using the bitcoin alphabet" do
     assert B58.decode58_check("12L5B5yqsf7vwb", alphabet: :btc) == {:ok, {"hello", <<0>>}}
-    assert B58.decode58_check("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) == {:ok, {"hello world", <<1>>}}
-    assert B58.decode58_check("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) == {:ok, {"Hello World", <<255>>}}
+
+    assert B58.decode58_check("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) ==
+             {:ok, {"hello world", <<1>>}}
+
+    assert B58.decode58_check("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) ==
+             {:ok, {"Hello World", <<255>>}}
+
     assert B58.decode58_check("1Wh4bh", alphabet: :btc) == {:ok, {<<>>, <<0>>}}
   end
 
   test "decode58_check!/2 Base58Check decodes to a RIPEMD-160 encoded hash" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    {hash_bin, version} = "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
-                          |> B58.decode58_check!(alphabet: :btc)
+    {hash_bin, version} =
+      "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
+      |> B58.decode58_check!(alphabet: :btc)
+
     assert version == <<0>>
+
     assert hash_bin
            |> Base.encode16(case: :lower) == "f54a5851e9372b87810a8e60cdd2e7cfd80b6e31"
   end
 
   test "decode58_check!/2 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     assert_raise ArgumentError, fn -> B58.decode58_check!("12L5B5yqsf7vwc", alphabet: :btc) end
-    #corrupt first byte
-    assert_raise ArgumentError, fn -> B58.decode58_check!("D5oSH5yUDQS9XwzogrcWP", alphabet: :btc) end
-    #corrupt middle byte
-    assert_raise ArgumentError, fn -> B58.decode58_check!("YXMkDYBSTEWWuE2vQhQ1nc", alphabet: :btc) end
-    #corrupted empty
+    # corrupt first byte
+    assert_raise ArgumentError, fn ->
+      B58.decode58_check!("D5oSH5yUDQS9XwzogrcWP", alphabet: :btc)
+    end
+
+    # corrupt middle byte
+    assert_raise ArgumentError, fn ->
+      B58.decode58_check!("YXMkDYBSTEWWuE2vQhQ1nc", alphabet: :btc)
+    end
+
+    # corrupted empty
     assert_raise ArgumentError, fn -> B58.decode58_check!("1Wi4bh", alphabet: :btc) end
   end
 
   test "decode58_check/2 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     {:error, _} = B58.decode58_check("12L5B5yqsf7vwc", alphabet: :btc)
-    #corrupt first byte
+    # corrupt first byte
     {:error, _} = B58.decode58_check("D5oSH5yUDQS9XwzogrcWP", alphabet: :btc)
-    #corrupt middle byte
+    # corrupt middle byte
     {:error, _} = B58.decode58_check("YXMkDYBSTEWWuE2vQhQ1nc", alphabet: :btc)
-    #corrupted empty
+    # corrupted empty
     {:error, _} = B58.decode58_check("1Wi4bh", alphabet: :btc)
   end
 
@@ -559,13 +628,17 @@ defmodule B58Test do
     # Zero is not in this alphabet
     assert_raise ArgumentError, fn -> B58.decode58_check!("012L5B5yqsf7vwb", alphabet: :btc) end
     # Underscore is not in this alphabet
-    assert_raise ArgumentError, fn -> B58.decode58_check!("B5oSH5yUDQS9XwzogrcW_", alphabet: :btc) end
+    assert_raise ArgumentError, fn ->
+      B58.decode58_check!("B5oSH5yUDQS9XwzogrcW_", alphabet: :btc)
+    end
+
     # Base64 alphabet is not compatible
     assert_raise ArgumentError, fn ->
       "Hello World"
       |> Base.encode64()
       |> B58.decode58_check!(alphabet: :btc)
     end
+
     # missing bytes
     assert_raise ArgumentError, fn -> B58.decode58_check!("1Wh4b", alphabet: :btc) end
     assert_raise ArgumentError, fn -> B58.decode58_check!(<<>>, alphabet: :btc) end
@@ -577,9 +650,11 @@ defmodule B58Test do
     # Underscore is not in this alphabet
     {:error, _} = B58.decode58_check("B5oSH5yUDQS9XwzogrcW_", alphabet: :btc)
     # Base64 alphabet is not compatible
-    {:error, _} = "Hello World"
-                  |> Base.encode64()
-                  |> B58.decode58_check(alphabet: :btc)
+    {:error, _} =
+      "Hello World"
+      |> Base.encode64()
+      |> B58.decode58_check(alphabet: :btc)
+
     # missing bytes
     {:error, _} = B58.decode58_check("1Wh4b", alphabet: :btc)
     {:error, _} = B58.decode58_check(<<>>, alphabet: :btc)
@@ -587,15 +662,25 @@ defmodule B58Test do
 
   test "version_decode58_check!/2 decodes Base58Check encoded binaries using the bitcoin alphabet" do
     assert B58.version_decode58_check!("12L5B5yqsf7vwb", alphabet: :btc) == <<0, "hello">>
-    assert B58.version_decode58_check!("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) == <<1, "hello world">>
-    assert B58.version_decode58_check!("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) == <<255, "Hello World">>
+
+    assert B58.version_decode58_check!("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) ==
+             <<1, "hello world">>
+
+    assert B58.version_decode58_check!("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) ==
+             <<255, "Hello World">>
+
     assert B58.version_decode58_check!("1Wh4bh", alphabet: :btc) == <<0>>
   end
 
   test "version_decode58_check/2 decodes Base58Check encoded binaries using the bitcoin alphabet" do
     assert B58.version_decode58_check("12L5B5yqsf7vwb", alphabet: :btc) == {:ok, <<0, "hello">>}
-    assert B58.version_decode58_check("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) == {:ok, <<1, "hello world">>}
-    assert B58.version_decode58_check("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) == {:ok, <<255, "Hello World">>}
+
+    assert B58.version_decode58_check("B5oSH5yUDQS9XwzogrcWP", alphabet: :btc) ==
+             {:ok, <<1, "hello world">>}
+
+    assert B58.version_decode58_check("YXMkDYBSTEWVuE2vQhQ1nc", alphabet: :btc) ==
+             {:ok, <<255, "Hello World">>}
+
     assert B58.version_decode58_check("1Wh4bh", alphabet: :btc) == {:ok, <<0>>}
   end
 
@@ -603,42 +688,58 @@ defmodule B58Test do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
     assert "1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs"
            |> B58.version_decode58_check!(alphabet: :btc)
-           |> :binary.decode_unsigned() == 0x0f54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+           |> :binary.decode_unsigned() == 0x0F54A5851E9372B87810A8E60CDD2E7CFD80B6E31
   end
 
   test "version_decode58_check!/2 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("12L5B5yqsf7vwc", alphabet: :btc) end
-    #corrupt first byte
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("D5oSH5yUDQS9XwzogrcWP", alphabet: :btc) end
-    #corrupt middle byte
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("YXMkDYBSTEWWuE2vQhQ1nc", alphabet: :btc) end
-    #corrupted empty
+    # corrupt last byte
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("12L5B5yqsf7vwc", alphabet: :btc)
+    end
+
+    # corrupt first byte
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("D5oSH5yUDQS9XwzogrcWP", alphabet: :btc)
+    end
+
+    # corrupt middle byte
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("YXMkDYBSTEWWuE2vQhQ1nc", alphabet: :btc)
+    end
+
+    # corrupted empty
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("1Wi4bh", alphabet: :btc) end
   end
 
   test "version_decode58_check/2 handles binaries with invalid checksums encoded using the bitcoin alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     {:error, _} = B58.version_decode58_check("12L5B5yqsf7vwc", alphabet: :btc)
-    #corrupt first byte
+    # corrupt first byte
     {:error, _} = B58.version_decode58_check("D5oSH5yUDQS9XwzogrcWP", alphabet: :btc)
-    #corrupt middle byte
+    # corrupt middle byte
     {:error, _} = B58.version_decode58_check("YXMkDYBSTEWWuE2vQhQ1nc", alphabet: :btc)
-    #corrupted empty
+    # corrupted empty
     {:error, _} = B58.version_decode58_check("1Wi4bh", alphabet: :btc)
   end
 
   test "version_decode58_check!/2 handles invalid binaries when using encoding using the bitcoin alphabet" do
     # Zero is not in this alphabet
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("012L5B5yqsf7vwb", alphabet: :btc) end
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("012L5B5yqsf7vwb", alphabet: :btc)
+    end
+
     # Underscore is not in this alphabet
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("B5oSH5yUDQS9XwzogrcW_", alphabet: :btc) end
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("B5oSH5yUDQS9XwzogrcW_", alphabet: :btc)
+    end
+
     # Base64 alphabet is not compatible
     assert_raise ArgumentError, fn ->
       "Hello World"
       |> Base.encode64()
       |> B58.version_decode58_check!(alphabet: :btc)
     end
+
     # missing bytes
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("1Wh4b", alphabet: :btc) end
     assert_raise ArgumentError, fn -> B58.version_decode58_check!(<<>>, alphabet: :btc) end
@@ -650,14 +751,15 @@ defmodule B58Test do
     # Underscore is not in this alphabet
     {:error, _} = B58.version_decode58_check("B5oSH5yUDQS9XwzogrcW_", alphabet: :btc)
     # Base64 alphabet is not compatible
-    {:error, _} = "Hello World"
-                  |> Base.encode64()
-                  |> B58.version_decode58_check(alphabet: :btc)
+    {:error, _} =
+      "Hello World"
+      |> Base.encode64()
+      |> B58.version_decode58_check(alphabet: :btc)
+
     # missing bytes
     {:error, _} = B58.version_decode58_check("1Wh4b", alphabet: :btc)
     {:error, _} = B58.version_decode58_check(<<>>, alphabet: :btc)
   end
-
 
   # ============================================================================
   # Flickr
@@ -693,12 +795,15 @@ defmodule B58Test do
     assert B58.encode58_check!("a", 255, alphabet: :flickr) == "3caW3qmcD"
     assert B58.encode58_check!(<<>>, <<2>>, alphabet: :flickr) == "ePH3jo"
     assert B58.encode58_check!(<<>>, 2, alphabet: :flickr) == "ePH3jo"
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", 256, alphabet: :flickr)
     end
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", -1, alphabet: :flickr)
     end
+
     assert_raise ArgumentError, fn ->
       B58.encode58_check!("a", <<1, 0>>, alphabet: :flickr)
     end
@@ -713,8 +818,13 @@ defmodule B58Test do
 
   test "encode58_check/3 Base58Check encodes strings according to the flickr alphabet" do
     assert B58.encode58_check("hello", 0, alphabet: :flickr) == {:ok, "12k5b5YQSE7VWA"}
-    assert B58.encode58_check("hello world", 1, alphabet: :flickr) == {:ok, "b5Nrh5Ytdpr9wWZNFRBvo"}
-    assert B58.encode58_check("Hello World", 255, alphabet: :flickr) == {:ok, "xwmKdxbrsevuUe2VpGp1MB"}
+
+    assert B58.encode58_check("hello world", 1, alphabet: :flickr) ==
+             {:ok, "b5Nrh5Ytdpr9wWZNFRBvo"}
+
+    assert B58.encode58_check("Hello World", 255, alphabet: :flickr) ==
+             {:ok, "xwmKdxbrsevuUe2VpGp1MB"}
+
     assert B58.encode58_check(<<>>, 0, alphabet: :flickr) == {:ok, "1vG4AG"}
   end
 
@@ -722,7 +832,8 @@ defmodule B58Test do
     # From https://github.com/multiformats/multihash
     assert "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
            |> Base.decode16!()
-           |> B58.encode58_check!(0, alphabet: :flickr) == "13FwK986G9PaPv3UnDgahdQtMxhN8B1NrEhzJudUZoTHrNKWGZZDj"
+           |> B58.encode58_check!(0, alphabet: :flickr) ==
+             "13FwK986G9PaPv3UnDgahdQtMxhN8B1NrEhzJudUZoTHrNKWGZZDj"
   end
 
   test "encode58_check!/3 Base58Check encodes a RIPEMD-160 hash using the flickr alphabet" do
@@ -734,8 +845,11 @@ defmodule B58Test do
 
   test "encode58_check!/2 handles Base58 encoding leading zeroes using the flickr alphabet" do
     assert B58.encode58_check!(<<0>>, 0, alphabet: :flickr) == "112DCb6Q"
-    assert B58.encode58_check!(<<0, 0, 0, "hello world">>, 0, alphabet: :flickr) == "11113Vpb7b6mRgpyzXcRNKFX4"
-    assert B58.encode58_check!(<<0, 0, 0>>, 0, alphabet: :flickr) ==  "11114ACpCz"
+
+    assert B58.encode58_check!(<<0, 0, 0, "hello world">>, 0, alphabet: :flickr) ==
+             "11113Vpb7b6mRgpyzXcRNKFX4"
+
+    assert B58.encode58_check!(<<0, 0, 0>>, 0, alphabet: :flickr) == "11114ACpCz"
   end
 
   test "version_encode58_check!/3 accepts unsigned single byte integer versions using the flickr alphabet" do
@@ -747,30 +861,45 @@ defmodule B58Test do
   end
 
   test "version_encode58_check/3 Base58Check encodes strings according to the flickr alphabet" do
-    assert B58.version_encode58_check(<<0, "hello">>, alphabet: :flickr) == {:ok, "12k5b5YQSE7VWA"}
-    assert B58.version_encode58_check(<<1, "hello world">>, alphabet: :flickr) == {:ok, "b5Nrh5Ytdpr9wWZNFRBvo"}
-    assert B58.version_encode58_check(<<255, "Hello World">>, alphabet: :flickr) == {:ok, "xwmKdxbrsevuUe2VpGp1MB"}
+    assert B58.version_encode58_check(<<0, "hello">>, alphabet: :flickr) ==
+             {:ok, "12k5b5YQSE7VWA"}
+
+    assert B58.version_encode58_check(<<1, "hello world">>, alphabet: :flickr) ==
+             {:ok, "b5Nrh5Ytdpr9wWZNFRBvo"}
+
+    assert B58.version_encode58_check(<<255, "Hello World">>, alphabet: :flickr) ==
+             {:ok, "xwmKdxbrsevuUe2VpGp1MB"}
+
     assert B58.version_encode58_check(<<0>>, alphabet: :flickr) == {:ok, "1vG4AG"}
   end
 
   test "version_encode58_check!/3 Base58Check encodes strings according to the flickr alphabet" do
     assert B58.version_encode58_check!(<<0, "hello">>, alphabet: :flickr) == "12k5b5YQSE7VWA"
-    assert B58.version_encode58_check!(<<1, "hello world">>, alphabet: :flickr) == "b5Nrh5Ytdpr9wWZNFRBvo"
-    assert B58.version_encode58_check!(<<255, "Hello World">>, alphabet: :flickr) == "xwmKdxbrsevuUe2VpGp1MB"
+
+    assert B58.version_encode58_check!(<<1, "hello world">>, alphabet: :flickr) ==
+             "b5Nrh5Ytdpr9wWZNFRBvo"
+
+    assert B58.version_encode58_check!(<<255, "Hello World">>, alphabet: :flickr) ==
+             "xwmKdxbrsevuUe2VpGp1MB"
+
     assert B58.version_encode58_check!(<<0>>, alphabet: :flickr) == "1vG4AG"
   end
 
   test "version_encode58_check!/2 Base58Check encodes a versioned RIPEMD-160 hash using the flickr alphabet" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    assert 0xf54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+    assert 0xF54A5851E9372B87810A8E60CDD2E7CFD80B6E31
            |> :binary.encode_unsigned()
            |> B58.version_binary(0)
-           |> B58.version_encode58_check!(alphabet: :flickr) == "1omYBzBMizrQWWiQJzWwbeRMkSy7qKwtaS"
+           |> B58.version_encode58_check!(alphabet: :flickr) ==
+             "1omYBzBMizrQWWiQJzWwbeRMkSy7qKwtaS"
   end
 
   test "version_encode58_check!/2 handles Base58 encoding leading zeroes using the flickr alphabet" do
     assert B58.version_encode58_check!(<<0, 0>>, alphabet: :flickr) == "112DCb6Q"
-    assert B58.version_encode58_check!(<<0, 0, 0, 0, "hello world">>, alphabet: :flickr) == "11113Vpb7b6mRgpyzXcRNKFX4"
+
+    assert B58.version_encode58_check!(<<0, 0, 0, 0, "hello world">>, alphabet: :flickr) ==
+             "11113Vpb7b6mRgpyzXcRNKFX4"
+
     assert B58.version_encode58_check!(<<0, 0, 0, 0>>, alphabet: :flickr) == "11114ACpCz"
   end
 
@@ -791,31 +920,37 @@ defmodule B58Test do
     # From https://github.com/multiformats/multihash
     assert "pLxTtB4HscAAEurdnjVTpQREYDZooMfVe33WfLUTW9obbK"
            |> B58.decode58!(alphabet: :flickr)
-           |> Base.encode16() == "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
+           |> Base.encode16() ==
+             "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
   end
 
   test "decode58!/2 Base58 handles invalid binaries when using the flickr alphabet" do
-    #invalid character
+    # invalid character
     assert_raise ArgumentError, fn ->
       B58.decode58!("~", alphabet: :flickr)
     end
-    #invalid leading character
+
+    # invalid leading character
     assert_raise ArgumentError, fn ->
       B58.decode58!("~Cn8eVZg", alphabet: :flickr)
     end
-    #invalid trailing character
+
+    # invalid trailing character
     assert_raise ArgumentError, fn ->
       B58.decode58!("Cn8eVZg^", alphabet: :flickr)
     end
-    #invalid character mid string
+
+    # invalid character mid string
     assert_raise ArgumentError, fn ->
       B58.decode58!("Cn8%eVZg", alphabet: :flickr)
     end
-    #invalid character excluded from alphabet due to clarity
+
+    # invalid character excluded from alphabet due to clarity
     assert_raise ArgumentError, fn ->
       B58.decode58!("OCn8eVZg", alphabet: :flickr)
     end
-    #base16 encoded string
+
+    # base16 encoded string
     assert_raise ArgumentError, fn ->
       "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
       |> B58.decode58!(alphabet: :flickr)
@@ -823,63 +958,83 @@ defmodule B58Test do
   end
 
   test "decode58/2 Base58 handles invalid binaries when using the flickr alphabet" do
-    #invalid character
+    # invalid character
     {:error, _} = B58.decode58("~", alphabet: :flickr)
-    #invalid leading character
+    # invalid leading character
     {:error, _} = B58.decode58("~cM8DuyF", alphabet: :flickr)
-    #invalid trailing character
+    # invalid trailing character
     {:error, _} = B58.decode58("cM8DuyF^", alphabet: :flickr)
-    #invalid character mid string
+    # invalid character mid string
     {:error, _} = B58.decode58("cM%DuyF", alphabet: :flickr)
-    #invalid character excluded from alphabet due to clarity
+    # invalid character excluded from alphabet due to clarity
     {:error, _} = B58.decode58("OcM8DuyF", alphabet: :flickr)
-    #base16 encoded string
-    {:error, _} = "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
-                  |> B58.decode58(alphabet: :flickr)
+    # base16 encoded string
+    {:error, _} =
+      "12209CBC07C3F991725836A3AA2A581CA2029198AA420B9D99BC0E131D9F3E2CBE47"
+      |> B58.decode58(alphabet: :flickr)
   end
 
   test "decode58_check!/2 decodes Base58Check encoded binaries using the flickr alphabet" do
     assert B58.decode58_check!("12k5b5YQSE7VWA", alphabet: :flickr) == {"hello", <<0>>}
-    assert B58.decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) == {"hello world", <<1>>}
-    assert B58.decode58_check!("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) == {"Hello World", <<255>>}
+
+    assert B58.decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) ==
+             {"hello world", <<1>>}
+
+    assert B58.decode58_check!("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) ==
+             {"Hello World", <<255>>}
+
     assert B58.decode58_check!("1vG4AG", alphabet: :flickr) == {<<>>, <<0>>}
   end
 
   test "decode58_check/2 decodes Base58Check encoded binaries using the flickr alphabet" do
     assert B58.decode58_check("12k5b5YQSE7VWA", alphabet: :flickr) == {:ok, {"hello", <<0>>}}
-    assert B58.decode58_check("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) == {:ok, {"hello world", <<1>>}}
-    assert B58.decode58_check("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) == {:ok, {"Hello World", <<255>>}}
+
+    assert B58.decode58_check("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) ==
+             {:ok, {"hello world", <<1>>}}
+
+    assert B58.decode58_check("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) ==
+             {:ok, {"Hello World", <<255>>}}
+
     assert B58.decode58_check("1vG4AG", alphabet: :flickr) == {:ok, {<<>>, <<0>>}}
   end
 
   test "decode58_check!/2 Base58Check decodes to a RIPEMD-160 encoded hash using the flickr alphabet" do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    {hash_bin, version} = "1omYBzBMizrQWWiQJzWwbeRMkSy7qKwtaS"
-                          |> B58.decode58_check!(alphabet: :flickr)
+    {hash_bin, version} =
+      "1omYBzBMizrQWWiQJzWwbeRMkSy7qKwtaS"
+      |> B58.decode58_check!(alphabet: :flickr)
+
     assert version == <<0>>
+
     assert hash_bin
            |> Base.encode16(case: :lower) == "f54a5851e9372b87810a8e60cdd2e7cfd80b6e31"
   end
 
   test "decode58_check!/2 handles binaries with invalid checksums encoded using the flickr alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     assert_raise ArgumentError, fn -> B58.decode58_check!("12k5b5YQSE7VWB", alphabet: :flickr) end
-    #corrupt first byte
-    assert_raise ArgumentError, fn -> B58.decode58_check!("x5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) end
-    #corrupt middle byte
-    assert_raise ArgumentError, fn -> B58.decode58_check!("xwmKdxbrssvuUe2VpGp1MB", alphabet: :flickr) end
-    #corrupted empty
+    # corrupt first byte
+    assert_raise ArgumentError, fn ->
+      B58.decode58_check!("x5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr)
+    end
+
+    # corrupt middle byte
+    assert_raise ArgumentError, fn ->
+      B58.decode58_check!("xwmKdxbrssvuUe2VpGp1MB", alphabet: :flickr)
+    end
+
+    # corrupted empty
     assert_raise ArgumentError, fn -> B58.decode58_check!("1vG4AB", alphabet: :flickr) end
   end
 
   test "decode58_check/2 handles binaries with invalid checksums encoded using the flickr alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     {:error, _} = B58.decode58_check("12k5b5YQSE7VWB", alphabet: :flickr)
-    #corrupt first byte
+    # corrupt first byte
     {:error, _} = B58.decode58_check("x5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr)
-    #corrupt middle byte
+    # corrupt middle byte
     {:error, _} = B58.decode58_check("xwmKdxbrssvuUe2VpGp1MB", alphabet: :flickr)
-    #corrupted empty
+    # corrupted empty
     {:error, _} = B58.decode58_check("1vG4AB", alphabet: :flickr)
   end
 
@@ -887,13 +1042,17 @@ defmodule B58Test do
     # Zero is not in this alphabet
     assert_raise ArgumentError, fn -> B58.decode58_check!("02k5b5YQSE7VWA", alphabet: :flickr) end
     # Underscore is not in this alphabet
-    assert_raise ArgumentError, fn -> B58.decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo_", alphabet: :flickr) end
+    assert_raise ArgumentError, fn ->
+      B58.decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo_", alphabet: :flickr)
+    end
+
     # Base64 alphabet is not compatible
     assert_raise ArgumentError, fn ->
       "Hello World"
       |> Base.encode64()
       |> B58.decode58_check!(alphabet: :flickr)
     end
+
     # missing bytes
     assert_raise ArgumentError, fn -> B58.decode58_check!("1v4AG", alphabet: :flickr) end
     assert_raise ArgumentError, fn -> B58.decode58_check!(<<>>, alphabet: :flickr) end
@@ -905,9 +1064,11 @@ defmodule B58Test do
     # Underscore is not in this alphabet
     {:error, _} = B58.decode58_check("b5Nrh5Ytdpr9wWZNFRBvo_", alphabet: :flickr)
     # Base64 alphabet is not compatible
-    {:error, _} = "Hello World"
-                  |> Base.encode64()
-                  |> B58.decode58_check(alphabet: :flickr)
+    {:error, _} =
+      "Hello World"
+      |> Base.encode64()
+      |> B58.decode58_check(alphabet: :flickr)
+
     # missing bytes
     {:error, _} = B58.decode58_check("1v4AG", alphabet: :flickr)
     {:error, _} = B58.decode58_check(<<>>, alphabet: :flickr)
@@ -915,15 +1076,26 @@ defmodule B58Test do
 
   test "version_decode58_check!/2 decodes Base58Check encoded binaries using the flickr alphabet" do
     assert B58.version_decode58_check!("12k5b5YQSE7VWA", alphabet: :flickr) == <<0, "hello">>
-    assert B58.version_decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) == <<1, "hello world">>
-    assert B58.version_decode58_check!("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) == <<255, "Hello World">>
+
+    assert B58.version_decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) ==
+             <<1, "hello world">>
+
+    assert B58.version_decode58_check!("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) ==
+             <<255, "Hello World">>
+
     assert B58.version_decode58_check!("1vG4AG", alphabet: :flickr) == <<0>>
   end
 
   test "version_decode58_check/2 decodes Base58Check encoded binaries using the flickr alphabet" do
-    assert B58.version_decode58_check("12k5b5YQSE7VWA", alphabet: :flickr) == {:ok, <<0, "hello">>}
-    assert B58.version_decode58_check("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) == {:ok, <<1, "hello world">>}
-    assert B58.version_decode58_check("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) == {:ok, <<255, "Hello World">>}
+    assert B58.version_decode58_check("12k5b5YQSE7VWA", alphabet: :flickr) ==
+             {:ok, <<0, "hello">>}
+
+    assert B58.version_decode58_check("b5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) ==
+             {:ok, <<1, "hello world">>}
+
+    assert B58.version_decode58_check("xwmKdxbrsevuUe2VpGp1MB", alphabet: :flickr) ==
+             {:ok, <<255, "Hello World">>}
+
     assert B58.version_decode58_check("1vG4AG", alphabet: :flickr) == {:ok, <<0>>}
   end
 
@@ -931,42 +1103,58 @@ defmodule B58Test do
     # ex per: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
     assert "1omYBzBMizrQWWiQJzWwbeRMkSy7qKwtaS"
            |> B58.version_decode58_check!(alphabet: :flickr)
-           |> :binary.decode_unsigned() == 0x0f54a5851e9372b87810a8e60cdd2e7cfd80b6e31
+           |> :binary.decode_unsigned() == 0x0F54A5851E9372B87810A8E60CDD2E7CFD80B6E31
   end
 
   test "version_decode58_check!/2 handles binaries with invalid checksums encoded using the flickr alphabet" do
-    #corrupt last byte
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("12k5b5YQSE7VWB", alphabet: :flickr) end
-    #corrupt first byte
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("r5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr) end
-    #corrupt middle byte
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("xwmKdxbrbevuUe2VpGp1MB", alphabet: :flickr) end
-    #corrupted empty
+    # corrupt last byte
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("12k5b5YQSE7VWB", alphabet: :flickr)
+    end
+
+    # corrupt first byte
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("r5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr)
+    end
+
+    # corrupt middle byte
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("xwmKdxbrbevuUe2VpGp1MB", alphabet: :flickr)
+    end
+
+    # corrupted empty
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("1v4AG", alphabet: :flickr) end
   end
 
   test "version_decode58_check/2 handles binaries with invalid checksums encoded using the flickr alphabet" do
-    #corrupt last byte
+    # corrupt last byte
     {:error, _} = B58.version_decode58_check("12k5b5YQSE7VWB", alphabet: :flickr)
-    #corrupt first byte
+    # corrupt first byte
     {:error, _} = B58.version_decode58_check("r5Nrh5Ytdpr9wWZNFRBvo", alphabet: :flickr)
-    #corrupt middle byte
+    # corrupt middle byte
     {:error, _} = B58.version_decode58_check("xwmKdxbrbevuUe2VpGp1MB", alphabet: :flickr)
-    #corrupted empty
+    # corrupted empty
     {:error, _} = B58.version_decode58_check("1v4AG", alphabet: :flickr)
   end
 
   test "version_decode58_check!/2 handles invalid binaries when using encoding using the flickr alphabet" do
     # Zero is not in this alphabet
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("02k5b5YQSE7VWB", alphabet: :flickr) end
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("02k5b5YQSE7VWB", alphabet: :flickr)
+    end
+
     # Underscore is not in this alphabet
-    assert_raise ArgumentError, fn -> B58.version_decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo_", alphabet: :flickr) end
+    assert_raise ArgumentError, fn ->
+      B58.version_decode58_check!("b5Nrh5Ytdpr9wWZNFRBvo_", alphabet: :flickr)
+    end
+
     # Base64 alphabet is not compatible
     assert_raise ArgumentError, fn ->
       "Hello World"
       |> Base.encode64()
       |> B58.version_decode58_check!(alphabet: :flickr)
     end
+
     # missing bytes
     assert_raise ArgumentError, fn -> B58.version_decode58_check!("1v4AG", alphabet: :flickr) end
     assert_raise ArgumentError, fn -> B58.version_decode58_check!(<<>>, alphabet: :flickr) end
@@ -978,14 +1166,15 @@ defmodule B58Test do
     # Underscore is not in this alphabet
     {:error, _} = B58.version_decode58_check("b5Nrh5Ytdpr9wWZNFRBvo_", alphabet: :flickr)
     # Base64 alphabet is not compatible
-    {:error, _} = "Hello World"
-                  |> Base.encode64()
-                  |> B58.version_decode58_check(alphabet: :flickr)
+    {:error, _} =
+      "Hello World"
+      |> Base.encode64()
+      |> B58.version_decode58_check(alphabet: :flickr)
+
     # missing bytes
     {:error, _} = B58.version_decode58_check("1v4AG", alphabet: :flickr)
     {:error, _} = B58.version_decode58_check(<<>>, alphabet: :flickr)
   end
-
 
   # ============================================================================
   # Ripple
@@ -1416,12 +1605,15 @@ defmodule B58Test do
     assert B58.version_binary("a", 255) == <<255, "a">>
     assert B58.version_binary(<<>>, <<2>>) == <<2>>
     assert B58.version_binary(<<>>, 2) == <<2>>
+
     assert_raise ArgumentError, fn ->
       B58.version_binary("a", 256)
     end
+
     assert_raise ArgumentError, fn ->
       B58.version_binary("a", -1)
     end
+
     assert_raise ArgumentError, fn ->
       B58.version_binary("a", <<1, 0>>)
     end
